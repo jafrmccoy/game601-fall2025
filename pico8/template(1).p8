@@ -44,7 +44,7 @@ function make_player()
 	p.y=16
 	p.state=0 --current player state
 	p.spr=0 --sprite
-	p.dir=0 --direction
+	p.dir=1 --direction
 	p.sprdir=0 --sprite direction
 	p.pat=0 --player state timer
 	p.bndx1=-1 --player bounds
@@ -53,7 +53,8 @@ function make_player()
 	p.bndy2=121
 	p.tilex=0 --player map tile
 	p.tiley=0
-	p.atkhoriz=false --atk horiz (true) or vert (false)
+	p.atk=false
+	p.atkhoriz=true --atk horiz (true) or vert (false)
 	
 	p.col=false
 end
@@ -76,168 +77,173 @@ function update_player()
 
 	p.pat+=1 --inc state clock
 	
-	--idle state
-	if p.state==0 then
-		p.spr=0
-		--replace tile
-		if map_collision(p.tilex,p.tiley,0) then
-			map_replace(p.tilex,p.tiley,17)
-		end
-		if (b0 or b1) change_state(1)
-		if (b2)  change_state(2)
-		if (b3) change_state(3)
-	end
-	
-	--walk state horiz
-	if p.state==1 then
-		p.atkhoriz=true
-		if (b0) then
-			p.dir=-1
-			p.sprdir=-1
-			p.tilex=((p.x+7)\8)+(16*screen)
-			p.tiley=(p.y+7)\8
-		end
-		if (b1) then
-			p.dir=1
-		 p.sprdir=1
-		 p.tilex=(p.x\8)+(16*screen)
-			p.tiley=p.y\8
+	if (not p.atk) then
+		--idle state
+		if p.state==0 then
+			p.spr=0
+			--replace tile
+			if map_collision(p.tilex,p.tiley,0) then
+				map_replace(p.tilex,p.tiley,17)
+			end
+			if (b0 or b1) change_state(1)
+			if (b2)  change_state(2)
+			if (b3) change_state(3)
 		end
 		
-		--if tile is dirt
-		if map_collision(p.tilex+p.dir,p.tiley,0) then
-			p.col=true
-			--check bounds
-			if (p.x+p.dir>p.bndx1 and p.x+p.dir<p.bndx2) then
-				--move
-				p.x+=p.dir			
-			end			
-		else --if tile is not dirt
-			p.col=false
-			--check bounds
-			if (p.x+(p.dir*2)>p.bndx1 and p.x+(p.dir*2)<p.bndx2) then
-				--move
-				
-				p.x+=p.dir*2
-			elseif (p.x+p.dir>p.bndx1 and p.x+p.dir<p.bndx2) then
-				p.x+=p.dir
+		--walk state horiz
+		if p.state==1 then
+			p.atkhoriz=true
+			if (b0) then
+				p.dir=-1
+				p.sprdir=-1
+				p.tilex=((p.x+7)\8)+(16*screen)
+				p.tiley=(p.y+7)\8
+			end
+			if (b1) then
+				p.dir=1
+			 p.sprdir=1
+			 p.tilex=(p.x\8)+(16*screen)
+				p.tiley=p.y\8
+			end
+			
+			--if tile is dirt
+			if map_collision(p.tilex+p.dir,p.tiley,0) then
+				p.col=true
+				--check bounds
+				if (p.x+p.dir>p.bndx1 and p.x+p.dir<p.bndx2) then
+					--move
+					p.x+=p.dir			
+				end			
+			else --if tile is not dirt
+				p.col=false
+				--check bounds
+				if (p.x+(p.dir*2)>p.bndx1 and p.x+(p.dir*2)<p.bndx2) then
+					--move
+					
+					p.x+=p.dir*2
+				elseif (p.x+p.dir>p.bndx1 and p.x+p.dir<p.bndx2) then
+					p.x+=p.dir
+				end
+			end
+			
+			--replace
+			if map_collision(p.tilex,p.tiley,0) then
+				map_replace(p.tilex,p.tiley,17)			
+			end
+			
+			p.spr=flr(p.pat/2)%2
+			
+			--check if sprite on whole tile
+			if ((p.x)%8==0) then		
+				if (not (b0 or b1)) change_state(0)
+				if b2 and not (b0 or b1) then
+				 change_state(2)
+				end
+				if b3 and not (b0 or b1) then
+				 change_state(3)
+				end
 			end
 		end
 		
-		--replace
-		if map_collision(p.tilex,p.tiley,0) then
-			map_replace(p.tilex,p.tiley,17)			
-		end
-		
-		p.spr=flr(p.pat/2)%2
-		
-		--check if sprite on whole tile
-		if ((p.x)%8==0) then		
-			if (not (b0 or b1)) change_state(0)
-			if b2 and not (b0 or b1) then
-			 change_state(2)
+		--walk state up
+		if p.state==2 then
+				p.atkhoriz=false
+				p.dir=-1
+			 p.sprdir=1
+			 p.tilex=((p.x+7)/8)+(16*screen)
+				p.tiley=(p.y+7)/8
+			
+			--if tile is dirt
+			if map_collision(p.tilex,p.tiley+p.dir,0) then
+				p.col=true
+				--check bounds
+				if (p.y+p.dir>p.bndy1 and p.y+p.dir<p.bndy2) then
+					--move
+					p.y+=p.dir
+				end
+			else --if tile is not dirt
+				p.col=false
+				--check bounds
+				if (p.y+(p.dir*2)>p.bndy1 and p.y+(p.dir*2)<p.bndy2) then
+					--move
+					p.y+=p.dir*2
+				elseif (p.y+p.dir>p.bndy1 and p.y+p.dir<p.bndy2) then
+					p.y+=p.dir
+				end	
 			end
-			if b3 and not (b0 or b1) then
-			 change_state(3)
+			
+			--replace
+			if map_collision(p.tilex,p.tiley,0) then
+				map_replace(p.tilex,p.tiley,17)
 			end
-		end
-	end
-	
-	--walk state up
-	if p.state==2 then
-			p.atkhoriz=false
-			p.dir=-1
-		 p.sprdir=1
-		 p.tilex=((p.x+7)/8)+(16*screen)
-			p.tiley=(p.y+7)/8
-		
-		--if tile is dirt
-		if map_collision(p.tilex,p.tiley+p.dir,0) then
-			p.col=true
-			--check bounds
-			if (p.y+p.dir>p.bndy1 and p.y+p.dir<p.bndy2) then
-				--move
-				p.y+=p.dir
-			end
-		else --if tile is not dirt
-			p.col=false
-			--check bounds
-			if (p.y+(p.dir*2)>p.bndy1 and p.y+(p.dir*2)<p.bndy2) then
-				--move
-				p.y+=p.dir*2
-			elseif (p.y+p.dir>p.bndy1 and p.y+p.dir<p.bndy2) then
-				p.y+=p.dir
-			end	
-		end
-		
-		--replace
-		if map_collision(p.tilex,p.tiley,0) then
-			map_replace(p.tilex,p.tiley,17)
-		end
-		
-		p.spr=(flr(p.pat/2)%2)+2
-		
-		--check if sprite on whole tile
-		if ((p.y)%8==0) then
-			if (not b2) change_state(0)
-			if (b0 or b1) and not b2 then
-				change_state(1)
-			end
-			if b3 and not b2 then
-				change_state(3)
+			
+			p.spr=(flr(p.pat/2)%2)+2
+			
+			--check if sprite on whole tile
+			if ((p.y)%8==0) then
+				if (not b2) change_state(0)
+				if (b0 or b1) and not b2 then
+					change_state(1)
+				end
+				if b3 and not b2 then
+					change_state(3)
+				end
 			end
 		end
-	end
-	
-	--walk state down
-	if p.state==3 then
-			p.atkhoriz=false
-			p.dir=1
-		 p.sprdir=1
-		 p.tilex=(p.x\8)+(16*screen)
-			p.tiley=p.y\8
 		
-		--if tile is dirt
-		if map_collision(p.tilex,p.tiley+p.dir,0) then
-			p.col=true
-			--check bounds
-			if (p.y+p.dir>p.bndy1 and p.y+p.dir<p.bndy2) then
-				--move
-				p.y+=p.dir
+		--walk state down
+		if p.state==3 then
+				p.atkhoriz=false
+				p.dir=1
+			 p.sprdir=1
+			 p.tilex=(p.x\8)+(16*screen)
+				p.tiley=p.y\8
+			
+			--if tile is dirt
+			if map_collision(p.tilex,p.tiley+p.dir,0) then
+				p.col=true
+				--check bounds
+				if (p.y+p.dir>p.bndy1 and p.y+p.dir<p.bndy2) then
+					--move
+					p.y+=p.dir
+				end
+			else --if tile is not dirt
+				p.col=false
+				--check bounds
+				if (p.y+(p.dir*2)>p.bndy1 and p.y+(p.dir*2)<p.bndy2) then
+					--move
+					p.y+=p.dir*2
+				elseif (p.y+p.dir>p.bndy1 and p.y+p.dir<p.bndy2) then
+					p.y+=p.dir
+				end	
 			end
-		else --if tile is not dirt
-			p.col=false
-			--check bounds
-			if (p.y+(p.dir*2)>p.bndy1 and p.y+(p.dir*2)<p.bndy2) then
-				--move
-				p.y+=p.dir*2
-			elseif (p.y+p.dir>p.bndy1 and p.y+p.dir<p.bndy2) then
-				p.y+=p.dir
-			end	
-		end
-		
-		--replace
-		if map_collision(p.tilex,p.tiley,0) then
-			map_replace(p.tilex,p.tiley,17)
-		end
-		
-		p.spr=(flr(p.pat/2)%2)+4
-		
-		--check if sprite on whole tile
-		if ((p.y)%8==0) then
-			if (not b3) change_state(0)
-			if (b0 or b1) and not b3 then
-				change_state(1)
+			
+			--replace
+			if map_collision(p.tilex,p.tiley,0) then
+				map_replace(p.tilex,p.tiley,17)
 			end
-			if b2 and not b3 then
-				change_state(2)
+			
+			p.spr=(flr(p.pat/2)%2)+4
+			
+			--check if sprite on whole tile
+			if ((p.y)%8==0) then
+				if (not b3) change_state(0)
+				if (b0 or b1) and not b3 then
+					change_state(1)
+				end
+				if b2 and not b3 then
+					change_state(2)
+				end
 			end
 		end
 	end
 	
 	--attack
 	if bx then
+		p.atk=true
 		update_atk()
+	else
+		p.atk=false
 	end
 end
 
@@ -283,30 +289,32 @@ end
 
 function update_atk()
  if p.atkhoriz then
- 	atk.x=p.x+(15*p.dir)
+ 	atk.x=p.x+(p.dir*8)
  	atk.y=p.y
  	atk.spr=9
  else
 		atk.x=p.x
-		atk.y=p.y+(15*p.dir)
+		atk.y=p.y+(p.dir*8)
 		atk.spr=10
 	end
 end
 
 function draw_atk()
 	if screen>0 then
-		spr(atk.spr,atk.x,atk.y)
+		if (p.atk) then
+			spr(atk.spr,atk.x,atk.y)
+		end
 	end
 end
 __gfx__
 006660000066600000066000006600000006600000006600000000000000000000333330000000000000c0000000000000000000000000000000000000000000
 0666660006666600006666000666600000666600000666600088880000000000073333330000000000006c000000000000000000000000000000000000000000
 6666666066666660066666606666660006666660006666660888888000000000717360600000000000006c000000000000000000000000000000000000000000
-6661717066617170066666686666668006711760006711768979979809799790073300000cc000000006c0000000000000000000000000000000000000000000
-066611000666118006666660666666000611116000611116897887980979979088333333c66cc66c0006c0000000000000000000000000000000000000000000
-06166680881188880166661016666100016666100016666108888880009009008883333000000cc0000c60000000000000000000000000000000000000000000
-88118888066666800166661016666100888666100888666100888800000000003883333300000000000c60000000000000000000000000000000000000000000
-066006806600006000000680060008000860000000800060099009900000000003300330000000000000c0000000000000000000000000000000000000000000
+666171706661717006666668666666800671176000671176897997980979979007330000000000000000c0000000000000000000000000000000000000000000
+066611000666118006666660666666000611116000611116897887980979979088333333000000000000c0000000000000000000000000000000000000000000
+0616668088118888016666101666610001666610001666610888888000900900888333300cc00000000c60000000000000000000000000000000000000000000
+881188880666668001666610166661008886661008886661008888000000000038833333c66cc66c000c60000000000000000000000000000000000000000000
+06600680660000600000068006000800086000000080006009900990000000000330033000000cc00000c0000000000000000000000000000000000000000000
 44444444bbbbbbbbaaaaaaaa00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 44444444bbbbbbbbaaaaaaaa00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 44444444bbbbbbbbaaaaaaaa00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -316,7 +324,7 @@ __gfx__
 44444444bbbbbbbbaaaaaaaa00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 44444444bbbbbbbbaaaaaaaa00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 __gff__
-0000000000000000000000000000000001020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0000000000000000000404000000000001020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 __map__
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
