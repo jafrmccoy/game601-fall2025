@@ -165,8 +165,7 @@ function update_player()
 				p.atkhoriz=false
 				p.dir=-1
 			 p.sprdir=1
-			 p.tilex=((p.x+7)/8)+(16*screen)
-				p.tiley=(p.y+7)/8
+				p.tiley=(p.y+7)\8
 			
 			--if tile is dirt
 			if map_collision(p.tilex,p.tiley+p.dir,0) then
@@ -267,6 +266,9 @@ function draw_player()
 		spr(p.spr,p.x,p.y,1,1,p.sprdir==-1)
 	end
 	
+	print("p.tilex:"..p.tilex)
+	print("p.tiley:"..p.tiley)
+	
 	if p.col then
 		print("col detected",64,64)
 	else
@@ -359,6 +361,13 @@ function spawn_enemy()
 				green.y=(iy*8)
 				green.dir=1
 				green.spr=8
+				green.sprdir=1
+				green.atkspr=13
+				green.atkdir=1
+				green.atk=false
+				green.atkx=0
+				green.atky=0
+				green.atktime=0
 				green.tilex=ix
 				green.tiley=iy
 				green.exist=true
@@ -444,6 +453,149 @@ function update_enem(enemy)
 			end
 	
 		end
+	end
+	
+	--green boys
+	if enemy.type==2 then
+	
+		--player in range
+		if (enemy.dir==1 and ((p.y==enemy.y and p.x>enemy.x and p.x<enemy.x+15) or enemy.atk==true)) then
+			--right
+			enemy.atkx=enemy.x+8
+			enemy.atky=enemy.y
+			enemy.atk=true
+			enemy.atkdir=1
+			enemy.atkspr=13
+			
+		elseif (enemy.dir==2 and ((p.x==enemy.x and p.y>enemy.y and p.y<enemy.y+15) or enemy.atk==true)) then
+			--down
+			enemy.atkx=enemy.x
+			enemy.atky=enemy.y+8
+			enemy.atk=true
+			enemy.atkdir=1
+			enemy.atkspr=14
+			
+		elseif (enemy.dir==3 and ((p.y==enemy.y and p.x<enemy.x and p.x>enemy.x-15) or enemy.atk==true)) then
+			--left
+			enemy.atkx=enemy.x-8
+			enemy.atky=enemy.y
+			enemy.atk=true
+			enemy.atkdir=-1
+			enemy.atkspr=13
+			
+		elseif (enemy.dir==4 and ((p.x==enemy.x and p.y<enemy.y and p.y>enemy.y-15) or enemy.atk==true)) then
+			--up
+			enemy.atkx=enemy.x
+			enemy.atky=enemy.y-8
+			enemy.atk=true
+			enemy.atkdir=-1
+			enemy.atkspr=14
+		else
+			enemy.atk=false
+		end
+		
+		--atk timer
+		if enemy.atk then
+			enemy.atktimer+=1
+			if enemy.atktimer==45 then	
+				--player in range
+				if (enemy.dir==1 and (p.y==enemy.y and p.x>enemy.x and p.x<enemy.x+15)) then
+					--right
+					enemy.atktimer=0
+				elseif (enemy.dir==2 and (p.x==enemy.x and p.y>enemy.y and p.y<enemy.y+15)) then
+					--down
+					enemy.atktimer=0
+				elseif (enemy.dir==3 and (p.y==enemy.y and p.x<enemy.x and p.x>enemy.x-15)) then
+					--left
+					enemy.atktimer=0
+				elseif (enemy.dir==4 and (p.x==enemy.x and p.y<enemy.y and p.y>enemy.y-15)) then
+					--up
+					enemy.atktimer=0
+				else				
+					enemy.atk=false
+				end
+			end
+		else
+			enemy.atktimer=0
+		end
+		
+		--movement
+		if enemy.atk==false then
+		
+			if enemy.y==16 then
+				--at top of screen
+				if enemy.x>-16 then
+					enemy.x-=0.5
+				else
+					enemy.exist=false
+				end
+			else
+				--right
+				if enemy.dir==1 then
+					enemy.sprdir=1
+					enemy.atkdir=1
+					enemy.atkspr=13
+					
+					if (not map_collision((enemy.x+8)\8+(16*screen),
+					(enemy.y)\8,0)) and (enemy.x+7<127) then
+						enemy.x+=0.5
+					elseif not (enemy.x%8==0) then
+						enemy.x+=0.5				
+					else
+						pick_dir(enemy)
+					end
+				
+				--down
+				elseif enemy.dir==2 then
+					enemy.sprdir=1
+					enemy.atkdir=1
+					enemy.atkspr=14
+					
+					if (not map_collision((enemy.x)\8+(16*screen),
+					(enemy.y+8)\8,0)) and (enemy.y+7<127) then
+						enemy.y+=0.5
+					elseif not (enemy.y%8==0) then
+						enemy.y+=0.5				
+					else
+						pick_dir(enemy)
+					end
+				
+				--left
+				elseif enemy.dir==3 then
+					enemy.sprdir=-1
+					enemy.atkdir=-1
+					enemy.atkspr=13
+					
+					if (not map_collision((enemy.x-8)\8+(16*screen),
+					(enemy.y)\8,0)) and (enemy.x-7>0) then
+						enemy.x-=0.5
+					elseif not (enemy.x%8==0) then
+						enemy.x-=0.5				
+					else
+						pick_dir(enemy)
+					end
+				
+				--up
+				elseif enemy.dir==4 then
+					enemy.sprdir=-1
+					enemy.atkdir=-1
+					enemy.atkspr=14
+					
+					if (not map_collision((enemy.x)\8+(16*screen),
+					(enemy.y-8)\8,0)) and (enemy.y-7>16) then
+						enemy.y-=0.5
+					elseif not (enemy.y%8==0) then
+						enemy.y-=0.5				
+					else
+						pick_dir(enemy)
+					end
+				
+				end
+		
+			end
+		
+		end
+	
 	end 
 end
 
@@ -487,26 +639,33 @@ end
 
 function draw_enemy()
 	foreach(enem,draw_enem)
-	print(#enem)
 end
 
 function draw_enem(enemy)
 	
 	if enemy.exist then
-		spr(enemy.spr,enemy.x,enemy.y)
+		spr(enemy.spr,enemy.x,enemy.y,1,1,enemy.sprdir==-1)
+		
+		if enemy.type==2 then
+			
+		end
+		
+		if (enemy.atk==true and enemy.atktimer<15) then
+			spr(enemy.atkspr,enemy.atkx,enemy.atky,1,1,enemy.sprdir==-1,enemy.sprdir==1)
+		end
 	else
 		del(enem,enemy)
 	end
 end
 __gfx__
-006660000066600000066000006600000006600000006600000000000000000000333330000000000000c0000000000000000000000000000000000000000000
-0666660006666600006666000666600000666600000666600088880000000000073333330000000000006c000000008888800000000000000000000000000000
-6666666066666660066666606666660006666660006666660888888000000000717360600000000000006c000000888888880090000000000000000000000000
-666171706661717006666668666666800671176000671176897997980979979007330000000000000000c0000008888889888090000000000000000000000000
-066611000666118006666660666666000611116000611116897887980979979088333333000000000000c0000088888899888990000000000000000000000000
-0616668088118888016666101666610001666610001666610888888000900900888333300cc00000000c60000088888979888990000000000000000000000000
-881188880666668001666610166661008886661008886661008888000000000038833333c66cc66c000c60000888889977888800000000000000000000000000
-06600680660000600000068006000800086000000080006009900990000000000330033000000cc00000c0000888897798888800000000000000000000000000
+006660000066600000066000006600000006600000006600000000000000000000333330000000000000c0000000000000000000000aa9889000908000000000
+0666660006666600006666000666600000666600000666600088880000000000073333330000000000006c0000000088888000000a9888009800808900000000
+6666666066666660066666606666660006666660006666660888888000000000717360600000000000006c000000888888880090a88888889808808900000000
+666171706661717006666668666666800671176000671176897997980979979007330000000000000000c0000008888889888090aa9888009888889a00000000
+066611000666118006666660666666000611116000611116897887980979979088333333000000000000c000008888889988899000a98880a988889000000000
+0616668088118888016666101666610001666610001666610888888000900900888333300cc00000000c60000088888979888990000a98880a8889a000000000
+881188880666668001666610166661008886661008886661008888000000000038833333c66cc66c000c600008888899778888000000aa990099800000000000
+06600680660000600000068006000800086000000080006009900990000000000330033000000cc00000c000088889779888880000000000000a900000000000
 44444444bbbbbbbb0000000000333330000000000000000000000000000000000000000000000000000000000888999788888800000000000000000000000000
 44444444bbbbbbbb0088880003333333000000000000000000000000000000000000000000000000000000000088888888888000000000000000000000000000
 44444444bbbbbbbb0888888030333030000000000000000000000000000000000000000000000000000000000088888888888000000000000000000000000000
