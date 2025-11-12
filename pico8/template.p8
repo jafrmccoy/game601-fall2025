@@ -344,9 +344,27 @@ function spawn_enemy()
 				red.spr=6
 				red.tilex=ix
 				red.tiley=iy
+				red.exist=true
+				red.tag=(ix*1000)+iy
 				add(enem,red)
 				map_replace(ix,iy,49)
-				
+			
+			--spawn green boys
+			elseif map_collision(ix,iy,3) then
+			
+				green={}
+				green={}
+				green.type=2
+				green.x=(ix*8)-(128*screen)
+				green.y=(iy*8)
+				green.dir=1
+				green.spr=8
+				green.tilex=ix
+				green.tiley=iy
+				green.exist=true
+				green.tag=(ix*1000)+iy
+				add(enem,green)
+				map_replace(ix,iy,49)
 			end
 		
 		end
@@ -367,81 +385,101 @@ function update_enem(enemy)
 	--red boys
 	if enemy.type==1 then
 	
-		--right
-		if enemy.dir==1 then
-		
-			if (not map_collision((enemy.x+8)\8+(16*screen),
-			(enemy.y)\8,0)) then
-				if (enemy.x+7<127) then
+		if enemy.y==16 then
+			--at top of screen
+			if enemy.x>-16 then
+				enemy.x-=0.5
+			else
+				enemy.exist=false
+			end
+		else
+			--right
+			if enemy.dir==1 then
+			
+				if (not map_collision((enemy.x+8)\8+(16*screen),
+				(enemy.y)\8,0)) and (enemy.x+7<127) then
 					enemy.x+=0.5
+				elseif not (enemy.x%8==0) then
+					enemy.x+=0.5				
+				else
+					pick_dir(enemy)
 				end
-			elseif not (enemy.x%8==0) then
-				enemy.x+=0.5				
-			else
-				pick_dir(enemy)
-			end
-		
-		--down
-		elseif enemy.dir==2 then
-		
-			if (not map_collision((enemy.x)\8+(16*screen),
-			(enemy.y+8)\8,0)) then
-				if (enemy.y+7<127) then
+			
+			--down
+			elseif enemy.dir==2 then
+			
+				if (not map_collision((enemy.x)\8+(16*screen),
+				(enemy.y+8)\8,0)) and (enemy.y+7<127) then
 					enemy.y+=0.5
+				elseif not (enemy.y%8==0) then
+					enemy.y+=0.5				
+				else
+					pick_dir(enemy)
 				end
-			elseif not (enemy.y%8==0) then
-				enemy.y+=0.5				
-			else
-				pick_dir(enemy)
-			end
-		
-		--left
-		elseif enemy.dir==3 then
-		
-			if (not map_collision((enemy.x-8)\8+(16*screen),
-			(enemy.y)\8,0)) then
-				if (enemy.x>0) then
+			
+			--left
+			elseif enemy.dir==3 then
+			
+				if (not map_collision((enemy.x-8)\8+(16*screen),
+				(enemy.y)\8,0)) and (enemy.x-7>0) then
 					enemy.x-=0.5
+				elseif not (enemy.x%8==0) then
+					enemy.x-=0.5				
+				else
+					pick_dir(enemy)
 				end
-			elseif not (enemy.x%8==0) then
-				enemy.x-=0.5				
-			else
-				pick_dir(enemy)
-			end
-		
-		--up
-		elseif enemy.dir==4 then
-		
-			if (not map_collision((enemy.x)\8+(16*screen),
-			(enemy.y-8)\8,0)) then
-				if (enemy.y-7>0) then
+			
+			--up
+			elseif enemy.dir==4 then
+			
+				if (not map_collision((enemy.x)\8+(16*screen),
+				(enemy.y-8)\8,0)) and (enemy.y-7>16) then
 					enemy.y-=0.5
+				elseif not (enemy.y%8==0) then
+					enemy.y-=0.5				
+				else
+					pick_dir(enemy)
 				end
-			elseif not (enemy.y%8==0) then
-				enemy.y-=0.5				
-			else
-				pick_dir(enemy)
+			
 			end
-		
+	
 		end
-	
-	end
-	
+	end 
 end
 
 function pick_dir(enemy)
 
-	if (not map_collision((enemy.x+8)\8+(16*screen),
+	if (abs((enemy.x+8-p.x))<abs(enemy.x-p.x)) and (not map_collision((enemy.x+8)\8+(16*screen),
 		(enemy.y)\8,0)) then
+		--right
 		enemy.dir=1
-	elseif (not map_collision((enemy.x)\8+(16*screen),
+	elseif (abs((enemy.y+8-p.y))<abs(enemy.y-p.y)) and (not map_collision((enemy.x)\8+(16*screen),
 		(enemy.y+8)\8,0)) then
+		--down
 		enemy.dir=2
-	elseif (not map_collision((enemy.x-8)\8+(16*screen),
+	elseif (abs((enemy.x-8-p.x))<abs(enemy.x-p.x)) and (not map_collision((enemy.x-8)\8+(16*screen),
 		(enemy.y)\8,0)) then
+		--left
 		enemy.dir=3
 	elseif (not map_collision((enemy.x)\8+(16*screen),
 		(enemy.y-8)\8,0)) then
+		--up
+		enemy.dir=4
+	elseif (not map_collision((enemy.x+8)\8+(16*screen),
+		(enemy.y)\8,0)) then
+		--right
+		enemy.dir=1
+	elseif (not map_collision((enemy.x)\8+(16*screen),
+		(enemy.y+8)\8,0)) then
+		--down
+		enemy.dir=2
+	elseif (not map_collision((enemy.x-8)\8+(16*screen),
+		(enemy.y)\8,0)) then
+		--left
+		enemy.dir=3
+	elseif (not map_collision((enemy.x)\8+(16*screen),
+		(enemy.y-8)\8,0)) then
+		--up
 		enemy.dir=4
 	end
 
@@ -449,10 +487,16 @@ end
 
 function draw_enemy()
 	foreach(enem,draw_enem)
+	print(#enem)
 end
 
 function draw_enem(enemy)
-	spr(enemy.spr,enemy.x,enemy.y)
+	
+	if enemy.exist then
+		spr(enemy.spr,enemy.x,enemy.y)
+	else
+		del(enem,enemy)
+	end
 end
 __gfx__
 006660000066600000066000006600000006600000006600000000000000000000333330000000000000c0000000000000000000000000000000000000000000
@@ -493,7 +537,7 @@ __gff__
 __map__
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-3030301030103030301030101010303010101010101010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+3030301030103030301030101010303000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 1030101030101030101030101010303010101010101010101010101010101010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 1030101030101030101030101010301010101010101010101010101010101010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 1030101030101030101030303010303010101010101010101010101010101010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
