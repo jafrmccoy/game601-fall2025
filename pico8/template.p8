@@ -472,7 +472,7 @@ function update_enem(enemy)
 			enemy.atkx=enemy.x
 			enemy.atky=enemy.y+8
 			enemy.atk=true
-			enemy.atkdir=1
+			enemy.atkdir=-1
 			enemy.atkspr=14
 			
 		elseif (enemy.dir==3 and ((p.y==enemy.y and p.x<enemy.x and p.x>enemy.x-15) or enemy.atk==true)) then
@@ -651,7 +651,7 @@ function draw_enem(enemy)
 		end
 		
 		if (enemy.atk==true and enemy.atktimer<15) then
-			spr(enemy.atkspr,enemy.atkx,enemy.atky,1,1,enemy.sprdir==-1,enemy.sprdir==1)
+			spr(enemy.atkspr,enemy.atkx,enemy.atky,1,1,enemy.sprdir==-1,enemy.sprdir==-1)
 		end
 	else
 		del(enem,enemy)
