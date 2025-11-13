@@ -12,6 +12,7 @@ function _init()
 	--player
 	make_player()
 	init_atk()	
+	init_life()
 	
 	--enemy
 	init_enemy()
@@ -23,6 +24,7 @@ function _update()
 	end
 	
 	update_player()
+	update_life()
 	spawn_enemy()
 	update_enemy()
 	
@@ -38,6 +40,7 @@ function _draw()
 		map(screen*16,0,0,0,16,16)
 		draw_enemy()
 		draw_player()
+		draw_life()
 		draw_atk()
 	end
 	
@@ -87,6 +90,7 @@ function update_player()
 		--idle state
 		if p.state==0 then
 			p.spr=0
+			p.atkhoriz=true
 			--replace tile
 			if map_collision(p.tilex,p.tiley,0) then
 				map_replace(p.tilex,p.tiley,17)
@@ -195,7 +199,10 @@ function update_player()
 			
 			--check if sprite on whole tile
 			if ((p.y)%8==0) then
-				if (not b2) change_state(0)
+				if (not b2) then
+					p.sprdir=-1
+					change_state(0)
+				end
 				if (b0 or b1) and not b2 then
 					change_state(1)
 				end
@@ -266,7 +273,7 @@ function draw_player()
 		spr(p.spr,p.x,p.y,1,1,p.sprdir==-1)
 	end
 	
-	print("p.tilex:"..p.tilex)
+	print("p.tilex:"..p.tilex,0,32)
 	print("p.tiley:"..p.tiley)
 	
 	if p.col then
@@ -364,6 +371,7 @@ function spawn_enemy()
 				green.sprdir=1
 				green.atkspr=13
 				green.atkdir=1
+				green.flipy=false
 				green.atk=false
 				green.atkx=0
 				green.atky=0
@@ -465,6 +473,7 @@ function update_enem(enemy)
 			enemy.atky=enemy.y
 			enemy.atk=true
 			enemy.atkdir=1
+			enemy.flipy=false
 			enemy.atkspr=13
 			
 		elseif (enemy.dir==2 and ((p.x==enemy.x and p.y>enemy.y and p.y<enemy.y+15) or enemy.atk==true)) then
@@ -473,6 +482,7 @@ function update_enem(enemy)
 			enemy.atky=enemy.y+8
 			enemy.atk=true
 			enemy.atkdir=-1
+			enemy.flipy=true
 			enemy.atkspr=14
 			
 		elseif (enemy.dir==3 and ((p.y==enemy.y and p.x<enemy.x and p.x>enemy.x-15) or enemy.atk==true)) then
@@ -481,6 +491,7 @@ function update_enem(enemy)
 			enemy.atky=enemy.y
 			enemy.atk=true
 			enemy.atkdir=-1
+			enemy.flipy=false
 			enemy.atkspr=13
 			
 		elseif (enemy.dir==4 and ((p.x==enemy.x and p.y<enemy.y and p.y>enemy.y-15) or enemy.atk==true)) then
@@ -488,7 +499,8 @@ function update_enem(enemy)
 			enemy.atkx=enemy.x
 			enemy.atky=enemy.y-8
 			enemy.atk=true
-			enemy.atkdir=-1
+			enemy.atkdir=1
+			enemy.flipy=false
 			enemy.atkspr=14
 		else
 			enemy.atk=false
@@ -651,10 +663,24 @@ function draw_enem(enemy)
 		end
 		
 		if (enemy.atk==true and enemy.atktimer<15) then
-			spr(enemy.atkspr,enemy.atkx,enemy.atky,1,1,enemy.sprdir==-1,enemy.sprdir==-1)
+			spr(enemy.atkspr,enemy.atkx,enemy.atky,1,1,enemy.atkdir==-1,enemy.flipy)
 		end
 	else
 		del(enem,enemy)
+	end
+end
+-->8
+function init_life()
+	life=2
+end
+
+function update_life()
+
+end
+
+function draw_life()
+	for i=0,life,1 do
+		spr(0,8*i,0)
 	end
 end
 __gfx__
