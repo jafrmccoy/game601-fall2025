@@ -1,2 +1,2 @@
-# game601-fall2025 beep
+# game601-fall2025
 
