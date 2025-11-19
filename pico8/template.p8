@@ -24,7 +24,6 @@ function _update()
 	end
 	
 	update_player()
-	update_life()
 	spawn_enemy()
 	update_enemy()
 	
@@ -39,7 +38,11 @@ function _draw()
 	else
 		map(screen*16,0,0,0,16,16)
 		draw_enemy()
-		draw_player()
+		if p.alive then
+			draw_player()
+		else
+			draw_gameover()
+		end
 		draw_life()
 		draw_atk()
 	end
@@ -64,6 +67,8 @@ function make_player()
 	p.tiley=0
 	p.atk=false
 	p.atkhoriz=true --atk horiz (true) or vert (false)
+	p.alive=true
+	p.score=0
 	
 	p.col=false
 end
@@ -71,6 +76,26 @@ end
 function change_state(s)
 	p.state=s
 	p.pat=0
+end
+
+function die_player()
+	--take a life
+	life-=1
+	if life<0 then
+		--game over
+		p.alive=false
+	else
+		--reset player
+		p.spr=0
+		p.atkhoriz=true
+		p.x=64
+		p.y=16
+		p.dir=1
+		p.sprdir=0
+		
+		change_state(4)
+	end
+
 end
 
 function update_player()
@@ -86,185 +111,197 @@ function update_player()
 
 	p.pat+=1 --inc state clock
 	
-	if (not p.atk) then
-		--idle state
-		if p.state==0 then
-			p.spr=0
-			p.atkhoriz=true
-			--replace tile
-			if map_collision(p.tilex,p.tiley,0) then
-				map_replace(p.tilex,p.tiley,17)
+	if p.alive then
+	
+		if p.state==4 then
+			--after death
+			if p.pat==15 then
+				change_state(0)
 			end
-			if (b0 or b1) change_state(1)
-			if (b2)  change_state(2)
-			if (b3) change_state(3)
-		end
-		
-		--walk state horiz
-		if p.state==1 then
-			p.atkhoriz=true
-			if (b0) then
-				p.dir=-1
-				p.sprdir=-1
-				p.tilex=((p.x+7)\8)+(16*screen)
-			end
-			if (b1) then
-				p.dir=1
-			 p.sprdir=1
-			 p.tilex=((p.x)\8)+(16*screen)
+		elseif (not p.atk) then
+			--idle state
+			if p.state==0 then
+				p.spr=0
+				p.atkhoriz=true
+				--replace tile
+				if map_collision(p.tilex,p.tiley,0) then
+					map_replace(p.tilex,p.tiley,17)
+					p.score+=10
+				end
+				if (b0 or b1) change_state(1)
+				if (b2)  change_state(2)
+				if (b3) change_state(3)
 			end
 			
-			--if tile is dirt left
-			if b0 and map_collision(p.tilex+p.dir,p.tiley,0) then
-				p.col=true
-				--check bounds
-				if (p.x+p.dir>p.bndx1 and p.x+p.dir<p.bndx2) then
-					--move
-					p.x+=p.dir			
+			--walk state horiz
+			if p.state==1 then
+				p.atkhoriz=true
+				if (b0) then
+					p.dir=-1
+					p.sprdir=-1
+					p.tilex=((p.x+7)\8)+(16*screen)
 				end
-			--if tile is dirt right
-			elseif b1 and map_collision(p.tilex+p.dir,p.tiley,0) then
-				p.col=true
-				--check bounds
-				if (p.x+p.dir>p.bndx1 and p.x+p.dir<p.bndx2) then
-					--move
-					p.x+=p.dir			
-				end							
-			else --if tile is not dirt
-				p.col=false
-				--check bounds
-				if (p.x+(p.dir*2)>p.bndx1 and p.x+(p.dir*2)<p.bndx2) then
-					--move
-					if (not((p.x+(p.dir*2))%8==1)) then
-						p.x+=p.dir*2
-					else
+				if (b1) then
+					p.dir=1
+				 p.sprdir=1
+				 p.tilex=((p.x)\8)+(16*screen)
+				end
+				
+				--if tile is dirt left
+				if b0 and map_collision(p.tilex+p.dir,p.tiley,0) then
+					p.col=true
+					--check bounds
+					if (p.x+p.dir>p.bndx1 and p.x+p.dir<p.bndx2) then
+						--move
+						p.x+=p.dir			
+					end
+				--if tile is dirt right
+				elseif b1 and map_collision(p.tilex+p.dir,p.tiley,0) then
+					p.col=true
+					--check bounds
+					if (p.x+p.dir>p.bndx1 and p.x+p.dir<p.bndx2) then
+						--move
+						p.x+=p.dir			
+					end							
+				else --if tile is not dirt
+					p.col=false
+					--check bounds
+					if (p.x+(p.dir*2)>p.bndx1 and p.x+(p.dir*2)<p.bndx2) then
+						--move
+						if (not((p.x+(p.dir*2))%8==1)) then
+							p.x+=p.dir*2
+						else
+							p.x+=p.dir
+						end
+					elseif (p.x+p.dir>p.bndx1 and p.x+p.dir<p.bndx2) then
 						p.x+=p.dir
 					end
-				elseif (p.x+p.dir>p.bndx1 and p.x+p.dir<p.bndx2) then
-					p.x+=p.dir
+				end
+				
+				--replace
+				if map_collision(p.tilex,p.tiley,0) then
+					map_replace(p.tilex,p.tiley,17)			
+					p.score+=10
+				end
+				
+				p.spr=flr(p.pat/2)%2
+				
+				--check if sprite on whole tile
+				if ((p.x)%8==0) then		
+					if (not (b0 or b1)) change_state(0)
+					if b2 and not (b0 or b1) then
+					 change_state(2)
+					end
+					if b3 and not (b0 or b1) then
+					 change_state(3)
+					end
 				end
 			end
 			
-			--replace
-			if map_collision(p.tilex,p.tiley,0) then
-				map_replace(p.tilex,p.tiley,17)			
+			--walk state up
+			if p.state==2 then
+					p.atkhoriz=false
+					p.dir=-1
+				 p.sprdir=1
+					p.tiley=(p.y+7)\8
+				
+				--if tile is dirt
+				if map_collision(p.tilex,p.tiley+p.dir,0) then
+					p.col=true
+					--check bounds
+					if (p.y+p.dir>p.bndy1 and p.y+p.dir<p.bndy2) then
+						--move
+						p.y+=p.dir
+					end
+				else --if tile is not dirt
+					p.col=false
+					--check bounds
+					if (p.y+(p.dir*2)>p.bndy1 and p.y+(p.dir*2)<p.bndy2) then
+						--move
+						p.y+=p.dir*2
+					elseif (p.y+p.dir>p.bndy1 and p.y+p.dir<p.bndy2) then
+						p.y+=p.dir
+					end	
+				end
+				
+				--replace
+				if map_collision(p.tilex,p.tiley,0) then
+					map_replace(p.tilex,p.tiley,17)
+					p.score+=10
+				end
+				
+				p.spr=(flr(p.pat/2)%2)+2
+				
+				--check if sprite on whole tile
+				if ((p.y)%8==0) then
+					if (not b2) then
+						p.sprdir=-1
+						change_state(0)
+					end
+					if (b0 or b1) and not b2 then
+						change_state(1)
+					end
+					if b3 and not b2 then
+						change_state(3)
+					end
+				end
 			end
 			
-			p.spr=flr(p.pat/2)%2
-			
-			--check if sprite on whole tile
-			if ((p.x)%8==0) then		
-				if (not (b0 or b1)) change_state(0)
-				if b2 and not (b0 or b1) then
-				 change_state(2)
+			--walk state down
+			if p.state==3 then
+					p.atkhoriz=false
+					p.dir=1
+				 p.sprdir=1
+				 p.tilex=(p.x\8)+(16*screen)
+					p.tiley=p.y\8
+				
+				--if tile is dirt
+				if map_collision(p.tilex,p.tiley+p.dir,0) then
+					p.col=true
+					--check bounds
+					if (p.y+p.dir>p.bndy1 and p.y+p.dir<p.bndy2) then
+						--move
+						p.y+=p.dir
+					end
+				else --if tile is not dirt
+					p.col=false
+					--check bounds
+					if (p.y+(p.dir*2)>p.bndy1 and p.y+(p.dir*2)<p.bndy2) then
+						--move
+						p.y+=p.dir*2
+					elseif (p.y+p.dir>p.bndy1 and p.y+p.dir<p.bndy2) then
+						p.y+=p.dir
+					end	
 				end
-				if b3 and not (b0 or b1) then
-				 change_state(3)
+				
+				--replace
+				if map_collision(p.tilex,p.tiley,0) then
+					map_replace(p.tilex,p.tiley,17)
+					p.score+=10
+				end
+				
+				p.spr=(flr(p.pat/2)%2)+4
+				
+				--check if sprite on whole tile
+				if ((p.y)%8==0) then
+					if (not b3) change_state(0)
+					if (b0 or b1) and not b3 then
+						change_state(1)
+					end
+					if b2 and not b3 then
+						change_state(2)
+					end
 				end
 			end
 		end
 		
-		--walk state up
-		if p.state==2 then
-				p.atkhoriz=false
-				p.dir=-1
-			 p.sprdir=1
-				p.tiley=(p.y+7)\8
-			
-			--if tile is dirt
-			if map_collision(p.tilex,p.tiley+p.dir,0) then
-				p.col=true
-				--check bounds
-				if (p.y+p.dir>p.bndy1 and p.y+p.dir<p.bndy2) then
-					--move
-					p.y+=p.dir
-				end
-			else --if tile is not dirt
-				p.col=false
-				--check bounds
-				if (p.y+(p.dir*2)>p.bndy1 and p.y+(p.dir*2)<p.bndy2) then
-					--move
-					p.y+=p.dir*2
-				elseif (p.y+p.dir>p.bndy1 and p.y+p.dir<p.bndy2) then
-					p.y+=p.dir
-				end	
-			end
-			
-			--replace
-			if map_collision(p.tilex,p.tiley,0) then
-				map_replace(p.tilex,p.tiley,17)
-			end
-			
-			p.spr=(flr(p.pat/2)%2)+2
-			
-			--check if sprite on whole tile
-			if ((p.y)%8==0) then
-				if (not b2) then
-					p.sprdir=-1
-					change_state(0)
-				end
-				if (b0 or b1) and not b2 then
-					change_state(1)
-				end
-				if b3 and not b2 then
-					change_state(3)
-				end
-			end
+		--attack
+		if bx then
+			p.atk=true
+			update_atk()
+		else
+			p.atk=false
 		end
-		
-		--walk state down
-		if p.state==3 then
-				p.atkhoriz=false
-				p.dir=1
-			 p.sprdir=1
-			 p.tilex=(p.x\8)+(16*screen)
-				p.tiley=p.y\8
-			
-			--if tile is dirt
-			if map_collision(p.tilex,p.tiley+p.dir,0) then
-				p.col=true
-				--check bounds
-				if (p.y+p.dir>p.bndy1 and p.y+p.dir<p.bndy2) then
-					--move
-					p.y+=p.dir
-				end
-			else --if tile is not dirt
-				p.col=false
-				--check bounds
-				if (p.y+(p.dir*2)>p.bndy1 and p.y+(p.dir*2)<p.bndy2) then
-					--move
-					p.y+=p.dir*2
-				elseif (p.y+p.dir>p.bndy1 and p.y+p.dir<p.bndy2) then
-					p.y+=p.dir
-				end	
-			end
-			
-			--replace
-			if map_collision(p.tilex,p.tiley,0) then
-				map_replace(p.tilex,p.tiley,17)
-			end
-			
-			p.spr=(flr(p.pat/2)%2)+4
-			
-			--check if sprite on whole tile
-			if ((p.y)%8==0) then
-				if (not b3) change_state(0)
-				if (b0 or b1) and not b3 then
-					change_state(1)
-				end
-				if b2 and not b3 then
-					change_state(2)
-				end
-			end
-		end
-	end
-	
-	--attack
-	if bx then
-		p.atk=true
-		update_atk()
-	else
-		p.atk=false
 	end
 end
 
@@ -272,6 +309,7 @@ function draw_player()
 	if screen>0 then
 		spr(p.spr,p.x,p.y,1,1,p.sprdir==-1)
 	end
+	print("score:"..p.score,80,0)
 	
 	print("p.tilex:"..p.tilex,0,32)
 	print("p.tiley:"..p.tiley)
@@ -284,6 +322,18 @@ function draw_player()
 	
 	print("p.x="..p.x)
 	print("p.x%8="..(p.x%8))
+end
+
+function draw_gameover()
+
+	print("game over",center_text("game over"),64)
+	print("final score:",center_text("final score:"),70)
+	print(p.score,center_text(tostr(p.score)),76)
+
+end
+
+function center_text(s)
+	return 64-(#s*2)
 end
 -->8
 function map_collision(tile_x, tile_y, flag)
@@ -333,8 +383,6 @@ end
 -->8
 function init_enemy()
 	enem={}
-
-
 end
 
 function spawn_enemy()
@@ -458,6 +506,10 @@ function update_enem(enemy)
 					pick_dir(enemy)
 				end
 			
+			end
+			
+			if (abs(enemy.x-p.x)<7 and abs(enemy.y-p.y)<7) then
+				die_player()
 			end
 	
 		end
@@ -672,10 +724,6 @@ end
 -->8
 function init_life()
 	life=2
-end
-
-function update_life()
-
 end
 
 function draw_life()
