@@ -24,8 +24,8 @@ title: Home
   <h3>1. Mower</h3>
   <p><strong>Genre:</strong> 2D Arcade Game | <strong>Engine:</strong> Pico-8</p>
   
-  <img src="assets/images/mower_title.png" alt="Mower Screenshot" style="max-width:25%;">
-  <img src="assets/images/mower_screen.png" alt="Mower Screenshot" style="max-width:25%;">
+  <img src="assets/images/mower_title.png" alt="Mower Screenshot" width="250">
+  <img src="assets/images/mower_screen.png" alt="Mower Screenshot" width="250">
   
   <p>A Dig-Dug insipired game where you mow your lawn and capture wild animals. Features tile-based movement and easily-created levels with 3 levels built in.</p>
   
