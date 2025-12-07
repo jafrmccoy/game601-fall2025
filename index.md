@@ -42,5 +42,5 @@ title: Home
   
   <p>A text-based space adventure. As the ship's engineer, try to save your fellow crewmates and yourself from impending doom.</p>
   
-  <iframe src="assets/twine/JarodMcCoy_LVotM_Sound.html">
+  <a href="assets/twine/JarodMcCoy_LVotM_Sound.html" target="_blank">Play in new tab!</a>
 </div>
