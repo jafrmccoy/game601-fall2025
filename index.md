@@ -29,7 +29,7 @@ title: Home
   
   <p>A Dig-Dug insipired game where you mow your lawn and capture wild animals. Features tile-based movement and easily-created levels with 3 levels built in.</p>
   
-  <iframe src="https://www.lexaloffle.com/bbs/widget.php?pid=mower_" allowfullscreen width="621" height="513" style="border:none; overflow:hidden"></iframe>
+  <iframe src="https://www.lexaloffle.com/bbs/widget.php?pid=mower_" allowfullscreen></iframe>
   
 </div>
 
@@ -42,7 +42,5 @@ title: Home
   
   <p>A text-based space adventure. As the ship's engineer, try to save your fellow crewmates and yourself from impending doom.</p>
   
-  <p>
-    <a href="#" class="btn">Download Build</a>
-  </p>
+  <iframe src="assets/twine/JarodMcCoy_LVotM_Sound.html">
 </div>
