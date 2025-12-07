@@ -29,7 +29,7 @@ title: Home
   
   <p>A Dig-Dug insipired game where you mow your lawn and capture wild animals. Features tile-based movement and easily-created levels with 3 levels built in.</p>
   
-  <iframe src="https://www.lexaloffle.com/bbs/widget.php?pid=mower_" allowfullscreen></iframe>
+  <iframe src="https://www.lexaloffle.com/bbs/widget.php?pid=mower_" allowfullscreen width="640" height="512" style="border:none; overflow:hidden"></iframe>
   
 </div>
 
